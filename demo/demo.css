@@ -1,0 +1,282 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  color: #1f2430;
+  background: #f6f7fb;
+}
+
+.demo {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  --panel-bg: #ffffff;
+  --panel-border: #e3e6ef;
+  --panel-fg: #1f2430;
+  --muted: #6b7280;
+}
+
+.demo--dark {
+  --panel-bg: #161a24;
+  --panel-border: #2c3243;
+  --panel-fg: #e6e9f2;
+  --muted: #9aa3b8;
+  background: #0f131c;
+  color: var(--panel-fg);
+}
+
+.demo--dark body,
+.demo--dark .demo-tree-wrap {
+  background: #0f131c;
+}
+
+.demo-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  color: var(--panel-fg);
+}
+
+.demo-header h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.demo-sub {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.demo-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 290px 1fr;
+}
+
+.demo-panel {
+  overflow: auto;
+  padding: 14px;
+  border-right: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  color: var(--panel-fg);
+}
+
+.demo-panel section {
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px dashed var(--panel-border);
+}
+
+.demo-panel section:last-child {
+  border-bottom: 0;
+}
+
+.demo-panel h2 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.demo-panel button,
+.chip {
+  padding: 6px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.demo-panel button:hover,
+.chip:hover {
+  border-color: #6366f1;
+  color: #4f46e5;
+}
+
+.demo--dark .demo-panel button:hover,
+.demo--dark .chip:hover {
+  color: #a5b4fc;
+}
+
+.demo-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip--on {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.12);
+  color: #4f46e5;
+}
+
+.demo-search {
+  display: flex;
+  gap: 6px;
+}
+
+.demo-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+}
+
+.demo-check,
+.demo-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.demo-range {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.demo-range input {
+  width: 100%;
+}
+
+.demo-stats dl {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.demo-stats dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.demo-stats dt {
+  color: var(--muted);
+}
+
+.demo-stats dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.demo-mono {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: 11px;
+}
+
+.demo-hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.demo-tree-wrap {
+  min-height: 0;
+  padding: 10px;
+  background: #f6f7fb;
+}
+
+.demo--dark .demo-tree-wrap {
+  background: #0f131c;
+}
+
+.demo-tree-wrap > .trt-root {
+  height: 100%;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--panel-bg);
+}
+
+/* ------------------------------------------------------- custom node labels */
+
+.demo-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.demo-icon {
+  display: inline-flex;
+  color: #9aa3b8;
+}
+
+.demo-icon--folder {
+  color: #f0b429;
+}
+
+.demo-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Muted, so the tree's own accent-coloured "selected inside" badge stands out. */
+.demo-badge {
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(120, 130, 150, 0.16);
+  color: #6b7280;
+  font-size: 10px;
+  line-height: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.demo-tag {
+  padding: 0 5px;
+  border-radius: 4px;
+  background: rgba(217, 58, 58, 0.12);
+  color: #d93a3a;
+  font-size: 10px;
+  line-height: 15px;
+}
+
+.demo-size {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}

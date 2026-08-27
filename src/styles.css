@@ -1,0 +1,369 @@
+/* react-tree-view — every colour is a variable, override any of them on .trt-root */
+.trt-root {
+  --trt-fg: #1f2430;
+  --trt-fg-muted: #6b7280;
+  --trt-bg: transparent;
+  --trt-hover: #eef2ff;
+  --trt-hover-root: #dfe6ff;
+  --trt-active-outline: #6366f1;
+  --trt-accent: #4f46e5;
+  --trt-accent-fg: #ffffff;
+  --trt-border: #d4d7e0;
+  --trt-disabled: #9aa0ac;
+  --trt-menu-bg: #ffffff;
+  --trt-menu-fg: #1f2430;
+  --trt-menu-hover: #f1f3f9;
+  --trt-menu-border: #e2e5ee;
+  --trt-menu-danger: #d93a3a;
+
+  position: relative;
+  overflow: auto;
+  outline: none;
+  color: var(--trt-fg);
+  background: var(--trt-bg);
+  font-size: 13px;
+  line-height: 1.2;
+  contain: layout paint;
+  -webkit-overflow-scrolling: touch;
+}
+
+.trt-root:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--trt-active-outline);
+}
+
+.trt-canvas {
+  position: relative;
+  width: 100%;
+  min-width: max-content;
+}
+
+.trt-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  min-width: max-content;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 8px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  user-select: none;
+  cursor: default;
+  /* translateY is set inline; keeps rows off the layout path while scrolling */
+  will-change: transform;
+}
+
+.trt-row:hover {
+  background: var(--trt-hover);
+}
+
+.trt-row--highlight {
+  background: var(--trt-hover);
+}
+
+.trt-row--hover-root {
+  background: var(--trt-hover-root);
+}
+
+.trt-row--active {
+  box-shadow: inset 0 0 0 1px var(--trt-active-outline);
+}
+
+.trt-row--disabled {
+  color: var(--trt-disabled);
+}
+
+.trt-indent {
+  flex: 0 0 auto;
+  height: 100%;
+}
+
+/* ---------------------------------------------------------------- caret */
+
+.trt-caret {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--trt-fg-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 90ms ease;
+}
+
+.trt-caret svg {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.trt-caret--open {
+  transform: rotate(90deg);
+}
+
+.trt-caret--empty {
+  cursor: default;
+}
+
+.trt-caret:not(.trt-caret--empty):hover {
+  background: rgba(99, 102, 241, 0.14);
+  color: var(--trt-accent);
+}
+
+/* --------------------------------------------- deep expand / collapse pair */
+
+.trt-deep {
+  flex: 0 0 auto;
+  display: inline-flex;
+  gap: 1px;
+  width: 34px;
+  opacity: 0;
+  transition: opacity 80ms ease;
+}
+
+.trt-row:hover .trt-deep,
+.trt-row--highlight .trt-deep,
+.trt-row--active .trt-deep,
+.trt-deep:focus-within {
+  opacity: 1;
+}
+
+.trt-btn {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  color: var(--trt-fg-muted);
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.trt-btn svg {
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+}
+
+.trt-btn:hover {
+  color: var(--trt-accent);
+  border-color: var(--trt-border);
+  background: #fff;
+}
+
+/* ------------------------------------------------------------- checkbox */
+
+/*
+ * The box itself is MUI's Checkbox, so its colours follow the MUI theme
+ * (including light/dark mode). Only the geometry is fixed here, to keep every
+ * row exactly `rowHeight` tall — MUI's default padding would grow it.
+ */
+.trt-check {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  margin: 0 4px 0 2px;
+  cursor: pointer;
+}
+
+.trt-check .MuiCheckbox-root {
+  padding: 0;
+}
+
+.trt-check .MuiSvgIcon-root {
+  font-size: 18px;
+}
+
+.trt-row--disabled .trt-check {
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------- label */
+
+.trt-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+}
+
+.trt-label {
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Keeps the badge next to the label while trailing content stays right-aligned. */
+.trt-spacer {
+  flex: 1 1 auto;
+  min-width: 6px;
+}
+
+.trt-badge {
+  flex: 0 0 auto;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--trt-accent);
+  color: var(--trt-accent-fg);
+  font-size: 10px;
+  line-height: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: default;
+}
+
+.trt-trailing {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  color: var(--trt-fg-muted);
+}
+
+/* ----------------------------------------------------------- context menu */
+
+.trt-menu {
+  position: fixed;
+  z-index: 9999;
+  min-width: 200px;
+  max-width: 340px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--trt-menu-border, #e2e5ee);
+  border-radius: 8px;
+  background: var(--trt-menu-bg, #fff);
+  color: var(--trt-menu-fg, #1f2430);
+  box-shadow: 0 10px 30px rgba(15, 20, 40, 0.16);
+  font-size: 13px;
+  outline: none;
+}
+
+.trt-menu-filter {
+  padding: 2px 2px 6px;
+}
+
+.trt-menu-filter input {
+  width: 100%;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--trt-menu-border, #e2e5ee);
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  outline: none;
+}
+
+.trt-menu-filter input:focus {
+  border-color: var(--trt-accent, #4f46e5);
+}
+
+.trt-menu-list {
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+.trt-menu-empty {
+  padding: 8px;
+  color: var(--trt-fg-muted, #6b7280);
+  font-size: 12px;
+}
+
+/* Fixed height: the windowed list positions items by index * this value. */
+.trt-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.trt-menu-arrow {
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  margin-left: 2px;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 5px solid currentColor;
+  opacity: 0.55;
+}
+
+.trt-menu-item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.trt-menu-item--active:not(:disabled),
+.trt-menu-item:hover:not(:disabled) {
+  background: var(--trt-menu-hover, #f1f3f9);
+}
+
+.trt-menu-item--danger {
+  color: var(--trt-menu-danger, #d93a3a);
+}
+
+.trt-menu-icon {
+  display: inline-flex;
+  width: 16px;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.trt-menu-label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trt-menu-shortcut {
+  flex: 0 0 auto;
+  opacity: 0.55;
+  font-size: 11px;
+}
+
+.trt-menu-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--trt-menu-border, #e2e5ee);
+}
+
+/* --------------------------------------------------------------- dark mode */
+
+.trt-root.trt-dark,
+.trt-menu.trt-dark {
+  --trt-fg: #e6e9f2;
+  --trt-fg-muted: #9aa3b8;
+  --trt-hover: #232a3d;
+  --trt-hover-root: #2e3752;
+  --trt-accent: #818cf8;
+  --trt-accent-fg: #10131c;
+  --trt-border: #3a4157;
+  --trt-disabled: #6b7280;
+  --trt-menu-bg: #1a1f2b;
+  --trt-menu-fg: #e6e9f2;
+  --trt-menu-hover: #262d3d;
+  --trt-menu-border: #333a4d;
+}
+
+.trt-root.trt-dark .trt-btn:hover {
+  background: #10141f;
+}

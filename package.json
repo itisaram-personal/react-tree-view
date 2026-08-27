@@ -1,0 +1,65 @@
+{
+  "name": "react-tree-view",
+  "version": "0.1.0",
+  "description": "High performance virtualized React tree with tri-state checkboxes, deep expand/collapse, hover subtree highlight and context menus.",
+  "type": "module",
+  "main": "./dist/react-tree-view.cjs",
+  "module": "./dist/react-tree-view.js",
+  "types": "./dist/index.d.ts",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/react-tree-view.js",
+      "require": "./dist/react-tree-view.cjs"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run build:types && vite build --mode lib",
+    "build:types": "tsc -p tsconfig.build.json",
+    "build:demo": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run test:store && npm run test:render",
+    "test:store": "esbuild tests/store.spec.ts --bundle --platform=node --format=esm --outfile=node_modules/.cache/trt-store.mjs --log-level=warning && node node_modules/.cache/trt-store.mjs",
+    "test:render": "esbuild tests/render.spec.tsx --bundle --platform=node --format=esm --jsx=automatic --loader:.css=empty --external:react --external:react-dom --outfile=node_modules/.cache/trt-render.mjs --log-level=warning && node node_modules/.cache/trt-render.mjs",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"demo/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,tsx}\""
+  },
+  "keywords": [
+    "react",
+    "tree",
+    "treeview",
+    "virtualized",
+    "checkbox",
+    "performance"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@emotion/react": "^11.5.0",
+    "@emotion/styled": "^11.3.0",
+    "@mui/material": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0",
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0"
+  },
+  "devDependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^9.3.1",
+    "@types/node": "^26.4.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "prettier": "^3.9.6",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5"
+  }
+}

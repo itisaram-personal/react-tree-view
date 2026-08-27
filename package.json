@@ -1,7 +1,18 @@
 {
-  "name": "react-tree-view",
+  "name": "@tree-view/react-tree-view",
   "version": "0.1.0",
   "description": "High performance virtualized React tree with tri-state checkboxes, deep expand/collapse, hover subtree highlight and context menus.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itisaram-personal/react-tree-view.git"
+  },
+  "homepage": "https://github.com/itisaram-personal/react-tree-view#readme",
+  "bugs": {
+    "url": "https://github.com/itisaram-personal/react-tree-view/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "main": "./dist/react-tree-view.cjs",
   "module": "./dist/react-tree-view.js",
@@ -30,7 +41,8 @@
     "test": "npm run test:store && npm run test:render",
     "test:store": "esbuild tests/store.spec.ts --bundle --platform=node --format=esm --outfile=node_modules/.cache/trt-store.mjs --log-level=warning && node node_modules/.cache/trt-store.mjs",
     "test:render": "esbuild tests/render.spec.tsx --bundle --platform=node --format=esm --jsx=automatic --loader:.css=empty --external:react --external:react-dom --outfile=node_modules/.cache/trt-render.mjs --log-level=warning && node node_modules/.cache/trt-render.mjs",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"demo/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,tsx}\""
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"demo/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,tsx}\"",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "react",

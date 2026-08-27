@@ -1,6 +1,6 @@
 {
   "name": "@tree-view/react-tree-view",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "High performance virtualized React tree with tri-state checkboxes, deep expand/collapse, hover subtree highlight and context menus.",
   "repository": {
     "type": "git",

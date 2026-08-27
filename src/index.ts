@@ -18,6 +18,7 @@ export type {
   ScrollAlign,
   SelectionMode,
   TreeApi,
+  TreeFilterFn,
   TreeMenuContext,
   TreeMenuItem,
   TreeMenuItems,

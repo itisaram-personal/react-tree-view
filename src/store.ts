@@ -11,6 +11,10 @@ const OFF: CheckState = 0
 const ON: CheckState = 1
 const PARTIAL: CheckState = 2
 
+/** `kept` flags: the row survives the filter / it sits under a matching node. */
+const KEPT = 1
+const UNDER_MATCH = 2
+
 export interface TreeStoreInit {
   checkedIds?: TreeNodeId[]
   expandedIds?: TreeNodeId[]
@@ -42,9 +46,22 @@ export class TreeStore<T = unknown> {
   readonly selectedInside: Int32Array
   readonly expanded: Uint8Array
 
+  /** 1 for a node that matches the filter itself. All zero when none is set. */
+  readonly matched: Uint8Array
+  /** How many nodes match the current filter. */
+  matchCount = 0
+  /** Non-zero for a node the filter keeps; null when no filter is set. */
+  private kept: Uint8Array | null = null
+
   /** Node indices currently rendered, in DFS order. */
   visible: Int32Array
   visibleCount = 0
+  /**
+   * Bumped only when the row list itself changes, unlike `version`, which also
+   * covers check state. Row offsets are O(rows) to rebuild, so the view uses
+   * this to skip that work when only a checkbox moved.
+   */
+  visibleVersion = 0
 
   activeIndex = -1
   hoverIndex = -1
@@ -62,6 +79,7 @@ export class TreeStore<T = unknown> {
     this.partialChildren = new Int32Array(n)
     this.selectedInside = new Int32Array(n)
     this.expanded = new Uint8Array(n)
+    this.matched = new Uint8Array(n)
     this.visible = new Int32Array(n)
 
     if (previous) this.adoptState(previous)
@@ -400,24 +418,113 @@ export class TreeStore<T = unknown> {
     return out
   }
 
+  // ------------------------------------------------------------------- filter
+
+  get filtered(): boolean {
+    return this.kept !== null
+  }
+
+  isMatch(index: number): boolean {
+    return this.matched[index] === 1
+  }
+
+  /**
+   * Narrows the rows to the nodes `test` accepts, plus their ancestors (so a
+   * match can be reached) and their descendants (so a matching branch stays
+   * browsable). Ancestors of a match are expanded, which is what puts the
+   * matches on screen. Pass null to clear.
+   *
+   * One pass to test, one up, one down — O(n) with no allocation per node, and
+   * nothing else in the store changes: check state, expansion and ids all still
+   * cover the whole tree, so clearing the filter brings every row back.
+   *
+   * Returns true when the row list has to be rebuilt.
+   */
+  setFilter(test: ((node: TreeNodeSource<T>, index: number) => boolean) | null): boolean {
+    const { model, matched } = this
+    const n = model.size
+
+    if (!test) {
+      if (this.kept === null) return false
+      this.kept = null
+      this.matchCount = 0
+      this.matched.fill(0)
+      this.markVisibleDirty()
+      return true
+    }
+
+    const kept = this.kept ?? new Uint8Array(n)
+    kept.fill(0)
+    matched.fill(0)
+    let count = 0
+    for (let i = 0; i < n; i++) {
+      if (!test(model.nodes[i], i)) continue
+      matched[i] = 1
+      kept[i] = KEPT
+      count++
+    }
+
+    // Upwards. A parent sits at a lower index than its children, so a single
+    // descending pass carries every match all the way to its root.
+    for (let i = n - 1; i > 0; i--) {
+      if (kept[i] === 0) continue
+      const parent = model.parent[i]
+      if (parent < 0) continue
+      kept[parent] |= KEPT
+      this.expanded[parent] = 1
+    }
+
+    // Downwards, for the same reason in reverse: everything below a match is
+    // kept, so opening a matching folder still shows what is inside it.
+    for (let i = 1; i < n; i++) {
+      const parent = model.parent[i]
+      if (parent < 0) continue
+      if (matched[parent] === 1 || (kept[parent] & UNDER_MATCH) !== 0) {
+        kept[i] |= KEPT | UNDER_MATCH
+      }
+    }
+
+    this.kept = kept
+    this.matchCount = count
+    this.markVisibleDirty()
+    return true
+  }
+
+  getMatchedIds(): TreeNodeId[] {
+    const out: TreeNodeId[] = []
+    for (let i = 0; i < this.model.size; i++) {
+      if (this.matched[i] === 1) out.push(this.model.ids[i])
+    }
+    return out
+  }
+
   // ------------------------------------------------------------------ visible
 
   markVisibleDirty(): void {
     this.visibleDirty = true
   }
 
-  /** Rebuilds the list of rendered rows. Collapsed subtrees are skipped whole. */
+  /**
+   * Rebuilds the list of rendered rows. Collapsed subtrees are skipped whole,
+   * and so are filtered-out ones: a node the filter drops has no kept
+   * descendant either, since `setFilter` keeps every ancestor of a match.
+   */
   ensureVisible(): void {
     if (!this.visibleDirty) return
-    const { model, expanded, visible } = this
+    const { model, expanded, visible, kept } = this
     let k = 0
     for (let i = 0; i < model.size;) {
+      if (kept !== null && kept[i] === 0) {
+        i += model.descendants[i] + 1
+        continue
+      }
       visible[k++] = i
       if (expanded[i] === 1 && model.descendants[i] > 0) i++
       else i += model.descendants[i] + 1
     }
     this.visibleCount = k
     this.visibleDirty = false
+    this.visibleVersion++
   }
 
   /** Row position of a node, or -1 when it sits inside a collapsed branch. */

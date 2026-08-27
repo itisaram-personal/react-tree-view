@@ -132,6 +132,46 @@ group('expansion and virtual rows', () => {
   eq(store.visibleCount, 4, 'expandToLevel(0) shows roots and their children')
 })
 
+group('filtering', () => {
+  const rows = (store: TreeStore) => {
+    store.ensureVisible()
+    return Array.from(store.visible.slice(0, store.visibleCount), (i) => store.model.ids[i])
+  }
+
+  const store = new TreeStore(sample)
+  const only = (id: string) => store.setFilter((node) => node.id === id)
+
+  only('a1b')
+  eq(store.matchCount, 1, 'one node matched')
+  // a is the ancestor, a1 the parent, a1b the match. a2/a2a/b are gone, and so
+  // is a1a — a sibling of the match is not part of its path.
+  eq(rows(store), ['a', 'a1', 'a1b'], 'the match and its ancestors, opened all the way down')
+  eq(store.isMatch(store.indexOf('a1b')), true, 'the match is flagged')
+  eq(store.isMatch(store.indexOf('a1')), false, 'an ancestor kept for context is not a match')
+
+  // A fresh store, since the filter above left `a1` open behind it.
+  const branch = new TreeStore(sample)
+  branch.setFilter((node) => node.id === 'a1')
+  eq(rows(branch), ['a', 'a1'], 'a matching branch itself starts collapsed')
+  branch.setExpanded(branch.indexOf('a1'), true)
+  eq(rows(branch), ['a', 'a1', 'a1a', 'a1b'], 'and opens to show everything under it')
+
+  store.setFilter((node) => String(node.id).startsWith('a2'))
+  eq(rows(store), ['a', 'a2', 'a2a'], 'a matching child is opened down to, not collapsed away')
+  eq(store.matchCount, 2, 'both a2 and a2a matched')
+
+  store.setFilter(() => false)
+  eq(rows(store), [], 'a filter nothing matches empties the tree')
+  eq(store.filtered, true, 'and it is still a filter')
+
+  store.setSubtreeCheck(store.indexOf('a2a'), 1)
+  store.setFilter(null)
+  eq(store.filtered, false, 'cleared')
+  eq(rows(store).length, 7, 'every row comes back, since the filter opened the tree')
+  eq(store.checkState[store.indexOf('a2a')], 1, 'check state set under a filter survives it')
+  eq(store.matchCount, 0, 'no matches without a filter')
+})
+
 group('state survives a data swap', () => {
   const store = new TreeStore(sample)
   store.setSubtreeCheck(store.indexOf('a1'), 1)
@@ -365,12 +405,25 @@ group('scale', () => {
   const ids = store.getCheckedIds({ mode: 'leaves' })
   const collectMs = performance.now() - started
 
+  // One pass to test, one up, one down — over 137k nodes.
+  started = performance.now()
+  store.setFilter((node) => String(node.id).endsWith('.6'))
+  const filterMs = performance.now() - started
+  store.ensureVisible()
+  ok(store.matchCount > 19_000, `filter matched ${store.matchCount.toLocaleString()} nodes`)
+  ok(store.visibleCount < store.model.size, 'and the row list shrank')
+  ok(filterMs < 100, `filtering the whole tree took ${filterMs.toFixed(1)} ms`)
+  store.setFilter(null)
+  store.ensureVisible()
+  eq(store.visibleCount, store.model.size, 'clearing brings every row back')
+
   eq(store.checkState[0], 1, 'root ends up fully checked')
   eq(ids.length, Math.pow(7, 6), 'every leaf is checked')
   ok(checkMs < 100, `deep check of the whole tree took ${checkMs.toFixed(1)} ms`)
   console.log(
     `  build ${buildMs.toFixed(1)} ms · visible rows ${visibleMs.toFixed(1)} ms · ` +
-      `deep check ${checkMs.toFixed(1)} ms · collect ${collectMs.toFixed(1)} ms`,
+      `deep check ${checkMs.toFixed(1)} ms · collect ${collectMs.toFixed(1)} ms · ` +
+      `filter ${filterMs.toFixed(1)} ms`,
   )
 })
 

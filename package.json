@@ -1,7 +1,7 @@
 {
   "name": "@tree-view/react-tree-view",
-  "version": "0.1.1",
-  "description": "High performance virtualized React tree with tri-state checkboxes, deep expand/collapse, hover subtree highlight and context menus.",
+  "version": "0.1.2",
+  "description": "High performance virtualized React tree with tri-state checkboxes, deep expand/collapse, filtering, wrapping labels, hover child highlight and context menus.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/itisaram-personal/react-tree-view.git"
@@ -50,6 +50,7 @@
     "treeview",
     "virtualized",
     "checkbox",
+    "filter",
     "performance"
   ],
   "license": "MIT",

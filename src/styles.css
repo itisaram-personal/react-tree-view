@@ -17,7 +17,11 @@
   --trt-menu-danger: #d93a3a;
 
   position: relative;
-  overflow: auto;
+  /* No sideways scrolling: long labels wrap and the row grows taller instead.
+     `--trt-row-h` is set inline from the `rowHeight` prop. */
+  --trt-row-h: 28px;
+  overflow-x: hidden;
+  overflow-y: auto;
   outline: none;
   color: var(--trt-fg);
   background: var(--trt-bg);
@@ -34,7 +38,6 @@
 .trt-canvas {
   position: relative;
   width: 100%;
-  min-width: max-content;
 }
 
 .trt-row {
@@ -42,17 +45,47 @@
   top: 0;
   left: 0;
   right: 0;
-  min-width: max-content;
   display: flex;
-  align-items: center;
+  /* Controls stay on the first line of a wrapped row; the label grows down. */
+  align-items: flex-start;
   gap: 2px;
   padding-right: 8px;
   box-sizing: border-box;
-  white-space: nowrap;
   user-select: none;
   cursor: default;
   /* translateY is set inline; keeps rows off the layout path while scrolling */
   will-change: transform;
+}
+
+/*
+ * Everything that is not the label keeps the height of one row and centres its
+ * own content in it, so a two-line label does not drag the caret and the
+ * checkbox down with it. (Each of these is an inline-flex box already.)
+ */
+.trt-indent,
+.trt-caret,
+.trt-deep,
+.trt-check,
+.trt-icon,
+.trt-badge-slot,
+.trt-trailing {
+  min-height: var(--trt-row-h);
+}
+
+/* --------------------------------------- uniform rows, horizontal scrolling */
+
+.trt-root--nowrap {
+  overflow-x: auto;
+}
+
+.trt-root--nowrap .trt-canvas {
+  min-width: max-content;
+}
+
+.trt-root--nowrap .trt-row {
+  min-width: max-content;
+  align-items: center;
+  white-space: nowrap;
 }
 
 .trt-row:hover {
@@ -116,11 +149,17 @@
 
 /* --------------------------------------------- deep expand / collapse pair */
 
+/*
+ * Sits after the label, and only for a node with children. The 34px are always
+ * reserved, so appearing on hover costs no reflow.
+ */
 .trt-deep {
   flex: 0 0 auto;
   display: inline-flex;
+  align-items: center;
   gap: 1px;
   width: 34px;
+  margin-left: 2px;
   opacity: 0;
   transition: opacity 80ms ease;
 }
@@ -194,15 +233,35 @@
 .trt-label {
   flex: 0 1 auto;
   min-width: 0;
+  box-sizing: border-box;
+  min-height: var(--trt-row-h);
+  padding: 3px 4px;
+  display: flex;
+  align-items: center;
+  /* Break at whitespace, and inside a word when a single token is too long to
+     fit — either way the row gets taller and nothing overflows sideways. */
+  overflow-wrap: anywhere;
+}
+
+.trt-root--nowrap .trt-label {
+  display: block;
+  min-height: 0;
   padding: 0 4px;
   overflow: hidden;
   text-overflow: ellipsis;
+  overflow-wrap: normal;
 }
 
 /* Keeps the badge next to the label while trailing content stays right-aligned. */
 .trt-spacer {
   flex: 1 1 auto;
   min-width: 6px;
+}
+
+.trt-badge-slot {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
 }
 
 .trt-badge {

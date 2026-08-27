@@ -26,6 +26,10 @@ const FILE_ICON = (
   </svg>
 )
 
+/** Appended to every label by the "Long labels" switch, to show rows wrapping. */
+const LONG_TAIL =
+  ' — generated/from/a/very/long/source/path.ts, with a description long enough that the row has to wrap onto a second and usually a third line'
+
 function formatMs(ms: number): string {
   return ms < 1 ? `${(ms * 1000).toFixed(0)} µs` : `${ms.toFixed(1)} ms`
 }
@@ -36,9 +40,12 @@ export function App() {
   const [dark, setDark] = useState(false)
   const [selectionMode, setSelectionMode] = useState<SelectionMode>('cascade')
   const [rowHeight, setRowHeight] = useState(28)
+  const [wrapLabels, setWrapLabels] = useState(true)
+  const [longLabels, setLongLabels] = useState(false)
   const [highlight, setHighlight] = useState(true)
   const [checkOnRowClick, setCheckOnRowClick] = useState(false)
   const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState('')
   const [timing, setTiming] = useState<{ label: string; ms: number } | null>(null)
   const [checkedCount, setCheckedCount] = useState(0)
   const [hovered, setHovered] = useState<string | null>(null)
@@ -226,19 +233,25 @@ export function App() {
     [timed, selectionMode],
   )
 
-  const renderLabel = useCallback((meta: TreeNodeMeta<DemoData>) => {
-    const kind = meta.node.data?.kind
-    return (
-      <span className="demo-label">
-        <span className={kind === 'folder' ? 'demo-icon demo-icon--folder' : 'demo-icon'}>
-          {kind === 'folder' ? FOLDER_ICON : FILE_ICON}
+  const renderLabel = useCallback(
+    (meta: TreeNodeMeta<DemoData>) => {
+      const kind = meta.node.data?.kind
+      return (
+        <span className="demo-label">
+          <span className={kind === 'folder' ? 'demo-icon demo-icon--folder' : 'demo-icon'}>
+            {kind === 'folder' ? FOLDER_ICON : FILE_ICON}
+          </span>
+          <span className={meta.matched ? 'demo-name demo-name--match' : 'demo-name'}>
+            {meta.node.label}
+            {longLabels ? LONG_TAIL : ''}
+          </span>
+          {meta.hasChildren ? <span className="demo-badge">{meta.descendantCount}</span> : null}
+          {meta.disabled ? <span className="demo-tag">locked</span> : null}
         </span>
-        <span className="demo-name">{meta.node.label}</span>
-        {meta.hasChildren ? <span className="demo-badge">{meta.descendantCount}</span> : null}
-        {meta.disabled ? <span className="demo-tag">locked</span> : null}
-      </span>
-    )
-  }, [])
+      )
+    },
+    [longLabels],
+  )
 
   const renderTrailing = useCallback(
     (meta: TreeNodeMeta<DemoData>) =>
@@ -246,6 +259,25 @@ export function App() {
         <span className="demo-size">{(meta.node.data.size / 1024).toFixed(1)} KB</span>
       ) : null,
     [],
+  )
+
+  const runFilter = useCallback(
+    (next: string) => {
+      setFilter(next)
+      const started = performance.now()
+      // The tree re-filters during its next render, so measure across the paint.
+      requestAnimationFrame(() => {
+        const api = treeRef.current
+        setTiming({
+          label: next.trim()
+            ? `filter "${next.trim()}" → ${api?.getMatchCount().toLocaleString() ?? 0} matches`
+            : 'filter cleared',
+          ms: performance.now() - started,
+        })
+        bump()
+      })
+    },
+    [bump],
   )
 
   const runSearch = useCallback(() => {
@@ -408,6 +440,25 @@ export function App() {
             </section>
 
             <section>
+              <h2>Filter</h2>
+              <div className="demo-search">
+                <input
+                  value={filter}
+                  placeholder="show matching only…"
+                  onChange={(e) => runFilter(e.target.value)}
+                />
+                <button onClick={() => runFilter('')} disabled={filter === ''}>
+                  Clear
+                </button>
+              </div>
+              <p className="demo-hint">
+                Narrows the tree to the matching nodes (marked), their ancestors and their contents,
+                and opens the way down to them. Nothing is thrown away: check state survives, and
+                clearing brings every row back.
+              </p>
+            </section>
+
+            <section>
               <h2>Find</h2>
               <div className="demo-search">
                 <input
@@ -418,6 +469,10 @@ export function App() {
                 />
                 <button onClick={runSearch}>Go</button>
               </div>
+              <p className="demo-hint">
+                Leaves the tree as it is and jumps to the first match: reveal, scroll to centre,
+                make it the active row.
+              </p>
             </section>
 
             <section>
@@ -449,7 +504,7 @@ export function App() {
                   checked={highlight}
                   onChange={(e) => setHighlight(e.target.checked)}
                 />
-                Highlight hovered subtree
+                Highlight hovered children
               </label>
               <label className="demo-check">
                 <input
@@ -458,6 +513,22 @@ export function App() {
                   onChange={(e) => setCheckOnRowClick(e.target.checked)}
                 />
                 Row click toggles checkbox
+              </label>
+              <label className="demo-check">
+                <input
+                  type="checkbox"
+                  checked={wrapLabels}
+                  onChange={(e) => setWrapLabels(e.target.checked)}
+                />
+                Wrap labels (no horizontal scroll)
+              </label>
+              <label className="demo-check">
+                <input
+                  type="checkbox"
+                  checked={longLabels}
+                  onChange={(e) => setLongLabels(e.target.checked)}
+                />
+                Long labels
               </label>
               <label className="demo-range">
                 Row height {rowHeight}px
@@ -481,6 +552,14 @@ export function App() {
                 <div>
                   <dt>Rows visible</dt>
                   <dd>{treeRef.current?.getVisibleCount().toLocaleString() ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt>Filter matches</dt>
+                  <dd>
+                    {filter.trim()
+                      ? (treeRef.current?.getMatchCount().toLocaleString() ?? '—')
+                      : '—'}
+                  </dd>
                 </div>
                 <div>
                   <dt>Checked leaves</dt>
@@ -509,10 +588,12 @@ export function App() {
               ref={treeRef}
               className={dark ? 'trt-dark' : undefined}
               data={data}
+              filter={filter}
               rowHeight={rowHeight}
+              wrapLabels={wrapLabels}
               selectionMode={selectionMode}
               defaultExpandLevel={1}
-              highlightSubtreeOnHover={highlight}
+              highlightChildrenOnHover={highlight}
               checkOnRowClick={checkOnRowClick}
               contextMenu={contextMenu}
               contextMenuClassName={dark ? 'trt-dark' : undefined}

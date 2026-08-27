@@ -32,6 +32,9 @@ export type CheckState = 0 | 1 | 2
  */
 export type SelectionMode = 'cascade' | 'independent'
 
+/** Decides whether a node matches the current `filter`. */
+export type TreeFilterFn<T = unknown> = (node: TreeNodeSource<T>, index: number) => boolean
+
 /** Everything a row knows about itself. Passed to `renderLabel` and menu handlers. */
 export interface TreeNodeMeta<T = unknown> {
   node: TreeNodeSource<T>
@@ -49,10 +52,15 @@ export interface TreeNodeMeta<T = unknown> {
   /** Checked nodes strictly below this one — what the badge shows. */
   selectedDescendantCount: number
   disabled: boolean
-  /** True for the hovered node and every visible descendant of it. */
+  /** True for the hovered node and its direct children. */
   highlighted: boolean
   /** True for the keyboard-focused row. */
   active: boolean
+  /**
+   * True when this node matches the current `filter` itself — the rest of the
+   * rows on screen are its ancestors and its descendants.
+   */
+  matched: boolean
 }
 
 export interface TreeMenuContext<T = unknown> {
@@ -158,6 +166,12 @@ export interface TreeApi<T = unknown> {
   getNodeCount(): number
   getVisibleCount(): number
   getVisibleIds(): TreeNodeId[]
+
+  /** How many nodes match the current `filter`. 0 when there is none. */
+  getMatchCount(): number
+  /** Ids of the matching nodes, in tree order. Empty when there is no filter. */
+  getMatchedIds(): TreeNodeId[]
+  isMatch(id: TreeNodeId): boolean
 }
 
 export interface CheckChangeEvent<T = unknown> {
@@ -180,8 +194,21 @@ export interface ExpandChangeEvent<T = unknown> {
 
 export interface TreeViewProps<T = unknown> {
   data: TreeNodeSource<T>[]
-  /** Fixed row height in px. Uniform heights are what keep virtualization O(1). */
+  /**
+   * Row height in px. With `wrapLabels` (the default) this is the minimum row
+   * height and the estimate used for rows that have not been measured yet; a
+   * row that wraps onto more lines grows past it. Set `wrapLabels={false}` to
+   * make it the fixed height of every row.
+   */
   rowHeight?: number
+  /**
+   * Wrap long labels onto more lines instead of scrolling sideways: the tree
+   * never scrolls horizontally and a row grows as tall as its label needs.
+   * Rows are measured after layout, so heights no longer have to be uniform.
+   * Default true. Set false for the uniform-height, horizontally scrolling
+   * behaviour (single line per row, ellipsis on overflow).
+   */
+  wrapLabels?: boolean
   /** Extra rows rendered above/below the viewport. Default 8. */
   overscan?: number
   /** Horizontal px added per depth level. Default 18. */
@@ -198,6 +225,19 @@ export interface TreeViewProps<T = unknown> {
   /** Expand every node on mount. Overrides `defaultExpandLevel`. */
   defaultExpandAll?: boolean
 
+  /**
+   * Shows only the matching nodes, their ancestors and their descendants, and
+   * expands the way down to every match. Everything the filter hides is still
+   * in the tree — check state, expansion and the imperative API keep covering
+   * all of it, and clearing the filter brings the rows straight back.
+   *
+   * A string matches nodes whose `label` contains it, case-insensitively; give
+   * it a function for anything else (labels that are not plain text, matching
+   * on `data`, …). The function is called once per node whenever its identity
+   * changes, so memoize it — an inline arrow re-filters on every render.
+   */
+  filter?: string | TreeFilterFn<T>
+
   /** How checkboxes behave. Default `cascade`. */
   selectionMode?: SelectionMode
   showCheckboxes?: boolean
@@ -209,10 +249,16 @@ export interface TreeViewProps<T = unknown> {
   showSelectedBadge?: boolean
   /** Replaces the default badge. Only called when the count is above zero. */
   renderBadge?: (count: number, meta: TreeNodeMeta<T>) => ReactNode
-  /** Show the per-row deep expand / deep collapse buttons. Default true. */
+  /**
+   * Show the per-row deep expand / deep collapse buttons, which follow the
+   * label and appear on hover. Default true.
+   */
   showDeepButtons?: boolean
-  /** Highlight the hovered node together with its visible subtree. Default true. */
-  highlightSubtreeOnHover?: boolean
+  /**
+   * Highlight the hovered node together with its direct children. Default true.
+   * Deeper descendants keep their own background.
+   */
+  highlightChildrenOnHover?: boolean
   /** Clicking a row label toggles its check state. Default false. */
   checkOnRowClick?: boolean
   /** Clicking a row label toggles expansion. Default false. */

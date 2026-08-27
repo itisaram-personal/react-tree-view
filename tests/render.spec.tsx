@@ -109,6 +109,44 @@ ok(withMenu.includes('data-trt-index'), 'a tree with a submenu-bearing menu stil
 const collapsed = renderToString(<TreeView data={data} />)
 ok((collapsed.match(/data-trt-index/g)?.length ?? 0) === 1, 'collapsed tree renders one row')
 
+// Wrapping labels: rows carry a floor, not a height, and nothing scrolls sideways.
+ok(html.includes('--trt-row-h:28px'), 'the row height is published as a CSS variable')
+ok(/class="trt-row"[^>]*style="min-height:28px/.test(html), 'wrapped rows get a min-height')
+ok(!html.includes('trt-root--nowrap'), 'wrapping is the default')
+
+const nowrap = renderToString(<TreeView data={data} wrapLabels={false} defaultExpandAll />)
+ok(nowrap.includes('trt-root--nowrap'), 'wrapLabels={false} marks the root')
+ok(/class="trt-row"[^>]*style="height:28px/.test(nowrap), 'uniform rows get a fixed height')
+// Uniform rows are pure arithmetic: row n sits at n * rowHeight.
+ok(nowrap.includes('translateY(28px)'), 'uniform rows are positioned by index * rowHeight')
+
+// Filtering: only the matches and their paths reach the DOM. "child 3" matches
+// child-3 and child-30..39 — 11 nodes — so the rows are root + those 11 + the
+// leaf each one carries along: 23 of the 81.
+const filtered = renderToString(<TreeView data={data} defaultExpandAll filter="child 3" />)
+const filteredRows = filtered.match(/data-trt-index/g)?.length ?? 0
+ok(filteredRows === 23, `filter left ${filteredRows} rows, expected 23 of 81`)
+ok(filtered.includes('child 3<'), 'the match is rendered')
+ok(filtered.includes('>root<'), 'and so is its ancestor')
+ok(!filtered.includes('child 5'), 'a non-matching sibling is gone')
+// "child 3" matches child-3 and child-30..39, whose leaves come along under them.
+ok(filtered.includes('leaf 3<'), 'what sits under a match stays browsable')
+
+const filterFn = renderToString(
+  <TreeView data={data} defaultExpandAll filter={(node) => node.id === 'leaf-7'} />,
+)
+ok(filterFn.includes('leaf 7<'), 'a predicate filter matches on anything, here the id')
+ok(!filterFn.includes('leaf 6'), 'and drops the rest')
+
+// A blank string is not a filter at all.
+const unfiltered = renderToString(<TreeView data={data} defaultExpandAll />)
+const blank = renderToString(<TreeView data={data} defaultExpandAll filter="   " />)
+ok(
+  (blank.match(/data-trt-index/g)?.length ?? 0) ===
+    (unfiltered.match(/data-trt-index/g)?.length ?? 0),
+  'a blank filter renders the same rows as no filter',
+)
+
 console.error = warn
 console.log(`\n${checks - failures}/${checks} assertions passed`)
 if (failures > 0) process.exit(1)

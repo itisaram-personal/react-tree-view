@@ -234,15 +234,20 @@ body {
 
 /* ------------------------------------------------------- custom node labels */
 
+/*
+ * Inline flow rather than a flex row: a long name then wraps onto the next line
+ * of the same row instead of pushing the icon and the counter onto lines of
+ * their own. Spacing is margins, so it survives both label modes.
+ */
 .demo-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  display: inline;
   min-width: 0;
 }
 
 .demo-icon {
   display: inline-flex;
+  vertical-align: -2px;
+  margin-right: 6px;
   color: #9aa3b8;
 }
 
@@ -251,12 +256,31 @@ body {
 }
 
 .demo-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* A node the filter matched itself, as opposed to one kept for context. */
+.demo-name--match {
+  font-weight: 700;
+}
+
+/* Uniform rows scroll sideways instead, so the name is clipped to one line. */
+.trt-root--nowrap .demo-label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.trt-root--nowrap .demo-name {
   overflow: hidden;
   text-overflow: ellipsis;
+  overflow-wrap: normal;
 }
 
 /* Muted, so the tree's own accent-coloured "selected inside" badge stands out. */
 .demo-badge {
+  display: inline-block;
+  margin-left: 6px;
   padding: 0 5px;
   border-radius: 999px;
   background: rgba(120, 130, 150, 0.16);
@@ -267,6 +291,8 @@ body {
 }
 
 .demo-tag {
+  display: inline-block;
+  margin-left: 6px;
   padding: 0 5px;
   border-radius: 4px;
   background: rgba(217, 58, 58, 0.12);

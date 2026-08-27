@@ -17,6 +17,8 @@ export interface TreeRowProps<T = unknown> {
   meta: TreeNodeMeta<T>
   top: number
   rowHeight: number
+  /** Labels wrap and the row grows: `rowHeight` becomes a minimum, not a size. */
+  wrap: boolean
   indent: number
   showCheckbox: boolean
   showDeepButtons: boolean
@@ -41,21 +43,31 @@ const CHEVRON = (
   </svg>
 )
 
-const PLUS = (
+/** Deep expand: the single caret doubled, pointing the way it opens. */
+const CHEVRONS_RIGHT = (
   <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
     <path
-      d="M8 3.5v9M3.5 8h9"
+      d="M3.5 4 7.5 8 3.5 12M8.5 4 12.5 8 8.5 12"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.75"
       strokeLinecap="round"
+      strokeLinejoin="round"
     />
   </svg>
 )
 
-const MINUS = (
+/** Deep collapse: the same pair, mirrored. */
+const CHEVRONS_LEFT = (
   <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-    <path d="M3.5 8h9" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+    <path
+      d="M12.5 4 8.5 8 12.5 12M7.5 4 3.5 8 7.5 12"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 )
 
@@ -65,7 +77,7 @@ const MINUS = (
  * but markup and no closures are allocated per node.
  */
 function TreeRowInner<T>(props: TreeRowProps<T>) {
-  const { meta, top, rowHeight, indent, showCheckbox, showDeepButtons, className } = props
+  const { meta, top, rowHeight, wrap, indent, showCheckbox, showDeepButtons, className } = props
   const { depth, expanded, checkState, disabled, hasChildren, highlighted, active } = meta
   const badgeCount = props.showBadge ? meta.selectedDescendantCount : 0
 
@@ -78,10 +90,14 @@ function TreeRowInner<T>(props: TreeRowProps<T>) {
 
   const label = props.renderLabel ? props.renderLabel(meta) : (meta.node.label ?? String(meta.id))
 
+  // In wrap mode the row is measured after layout, so rowHeight is only a floor.
+  const transform = `translateY(${top}px)`
+  const style = wrap ? { minHeight: rowHeight, transform } : { height: rowHeight, transform }
+
   return (
     <div
       className={rowClass}
-      style={{ height: rowHeight, transform: `translateY(${top}px)` }}
+      style={style}
       data-trt-index={meta.index}
       role="treeitem"
       aria-level={depth + 1}
@@ -105,31 +121,6 @@ function TreeRowInner<T>(props: TreeRowProps<T>) {
         <span className="trt-caret trt-caret--empty" />
       )}
 
-      {showDeepButtons && hasChildren ? (
-        <span className="trt-deep">
-          <span
-            className="trt-btn"
-            data-trt-action="expand-deep"
-            role="button"
-            title="Expand this node and every descendant"
-            aria-label="Expand all descendants"
-          >
-            {PLUS}
-          </span>
-          <span
-            className="trt-btn"
-            data-trt-action="collapse-deep"
-            role="button"
-            title="Collapse this node and every descendant"
-            aria-label="Collapse all descendants"
-          >
-            {MINUS}
-          </span>
-        </span>
-      ) : showDeepButtons ? (
-        <span className="trt-deep trt-deep--empty" />
-      ) : null}
-
       {showCheckbox ? (
         <span className="trt-check" data-trt-action="check">
           <Checkbox
@@ -151,17 +142,47 @@ function TreeRowInner<T>(props: TreeRowProps<T>) {
       </span>
 
       {badgeCount > 0 ? (
-        props.renderBadge ? (
-          props.renderBadge(badgeCount, meta)
-        ) : (
+        <span className="trt-badge-slot">
+          {props.renderBadge ? (
+            props.renderBadge(badgeCount, meta)
+          ) : (
+            <span
+              className="trt-badge"
+              title={`${badgeCount} selected inside`}
+              aria-label={`${badgeCount} selected inside`}
+            >
+              {badgeCount}
+            </span>
+          )}
+        </span>
+      ) : null}
+
+      {/*
+       * After the label: the pair is always in the layout for a node with
+       * children (only its opacity changes on hover), so revealing it never
+       * reflows the label or re-measures the row.
+       */}
+      {showDeepButtons && hasChildren ? (
+        <span className="trt-deep">
           <span
-            className="trt-badge"
-            title={`${badgeCount} selected inside`}
-            aria-label={`${badgeCount} selected inside`}
+            className="trt-btn"
+            data-trt-action="collapse-deep"
+            role="button"
+            title="Collapse this node and every descendant"
+            aria-label="Collapse all descendants"
           >
-            {badgeCount}
+            {CHEVRONS_LEFT}
           </span>
-        )
+          <span
+            className="trt-btn"
+            data-trt-action="expand-deep"
+            role="button"
+            title="Expand this node and every descendant"
+            aria-label="Expand all descendants"
+          >
+            {CHEVRONS_RIGHT}
+          </span>
+        </span>
       ) : null}
 
       <span className="trt-spacer" />

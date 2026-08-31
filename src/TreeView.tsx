@@ -134,6 +134,15 @@ function TreeViewInner<T>(props: TreeViewProps<T>, ref: ForwardedRef<TreeApi<T>>
     store.setFilter(toPredicate(props.filter))
   }
 
+  // The text the rows mark inside their labels: the filter string by default,
+  // overridable for a predicate filter (which has no text) or for highlighting
+  // with no filter at all. Empty means the labels render untouched.
+  const highlight =
+    props.highlightMatches === false
+      ? undefined
+      : (props.highlightText ?? (typeof props.filter === 'string' ? props.filter.trim() : '')) ||
+        undefined
+
   const { model } = store
   const viewportRef = useRef<HTMLDivElement | null>(null)
   const canvasRef = useRef<HTMLDivElement | null>(null)
@@ -811,6 +820,7 @@ function TreeViewInner<T>(props: TreeViewProps<T>, ref: ForwardedRef<TreeApi<T>>
         showCheckbox={showCheckboxes}
         showDeepButtons={showDeepButtons}
         showBadge={showSelectedBadge}
+        highlight={highlight}
         className={custom && rowClass ? custom + ' ' + rowClass : (custom ?? rowClass)}
         renderLabel={props.renderLabel}
         renderIcon={props.renderIcon}

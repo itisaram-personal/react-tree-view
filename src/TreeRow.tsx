@@ -1,6 +1,7 @@
 import { memo } from 'react'
 import Checkbox from '@mui/material/Checkbox'
 import type { ReactNode } from 'react'
+import { highlightMatches } from './highlight'
 import type { TreeNodeMeta } from './types'
 
 /**
@@ -23,6 +24,11 @@ export interface TreeRowProps<T = unknown> {
   showCheckbox: boolean
   showDeepButtons: boolean
   showBadge: boolean
+  /**
+   * Text to mark inside the label — the filter string, when the tree is
+   * filtering and highlighting is on. Empty or absent leaves the label alone.
+   */
+  highlight?: string
   className?: string
   renderLabel?: (meta: TreeNodeMeta<T>) => ReactNode
   renderIcon?: (meta: TreeNodeMeta<T>) => ReactNode
@@ -88,7 +94,11 @@ function TreeRowInner<T>(props: TreeRowProps<T>) {
   if (checkState === 1) rowClass += ' trt-row--checked'
   if (className) rowClass += ' ' + className
 
-  const label = props.renderLabel ? props.renderLabel(meta) : (meta.node.label ?? String(meta.id))
+  const rawLabel = props.renderLabel
+    ? props.renderLabel(meta)
+    : (meta.node.label ?? String(meta.id))
+  // Marks the matched substring. A non-string label passes straight through.
+  const label = props.highlight ? highlightMatches(rawLabel, props.highlight) : rawLabel
 
   // In wrap mode the row is measured after layout, so rowHeight is only a floor.
   const transform = `translateY(${top}px)`

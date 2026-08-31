@@ -138,6 +138,66 @@ const filterFn = renderToString(
 ok(filterFn.includes('leaf 7<'), 'a predicate filter matches on anything, here the id')
 ok(!filterFn.includes('leaf 6'), 'and drops the rest')
 
+// Match highlighting: the matched substring of a label, and only that, is marked.
+ok(
+  filtered.includes('<mark class="trt-mark">child 3</mark>'),
+  'the matched part of the label is marked',
+)
+ok(
+  /<mark class="trt-mark">child 3<\/mark>0</.test(filtered),
+  'and only that part — "child 30" keeps its trailing 0 outside the mark',
+)
+ok(!/leaf 3<\/mark>/.test(filtered), 'a row kept for its ancestry is not marked')
+ok(!filtered.includes('>root</mark>'), 'nor is an ancestor of a match')
+
+const partial = renderToString(<TreeView data={data} defaultExpandAll filter="hil" />)
+ok(
+  partial.includes('c<mark class="trt-mark">hil</mark>d 1<'),
+  'a mid-label match is marked in place, leaving both sides as text',
+)
+
+const noMark = renderToString(
+  <TreeView data={data} defaultExpandAll filter="child 3" highlightMatches={false} />,
+)
+ok(!noMark.includes('trt-mark'), 'highlightMatches={false} renders plain labels')
+ok(noMark.includes('child 3<'), 'and the label itself is untouched')
+
+// A predicate filter carries no text, so the text to mark is given explicitly.
+const fnMark = renderToString(
+  <TreeView
+    data={data}
+    defaultExpandAll
+    filter={(node) => node.id === 'leaf-7'}
+    highlightText="af"
+  />,
+)
+ok(
+  fnMark.includes('le<mark class="trt-mark">af</mark> 7<'),
+  'highlightText marks under a predicate filter',
+)
+
+// Highlighting with no filter: every row stays, the matching part is marked.
+const markOnly = renderToString(<TreeView data={data} defaultExpandAll highlightText="ild 1" />)
+ok(
+  markOnly.includes('ch<mark class="trt-mark">ild 1</mark><'),
+  'highlightText marks without filtering',
+)
+ok(markOnly.includes('child 2<'), 'and drops no rows')
+
+// Case-insensitive, like the filter itself, and it marks every occurrence.
+const repeat = renderToString(<TreeView data={[{ id: 'a', label: 'AbcAbc' }]} highlightText="bC" />)
+ok(
+  repeat.includes('A<mark class="trt-mark">bc</mark>A<mark class="trt-mark">bc</mark>'),
+  'every occurrence is marked, case-insensitively, keeping the original casing',
+)
+
+// A label that is not a string cannot be sliced; it renders as it was given.
+const nodeLabel = renderToString(
+  <TreeView data={[{ id: 'a', label: <b>Abcd</b> }]} highlightText="bc" />,
+)
+ok(nodeLabel.includes('<b>Abcd</b>'), 'a ReactNode label passes through unmarked')
+ok(!nodeLabel.includes('trt-mark'), 'and gains no marks')
+
 // A blank string is not a filter at all.
 const unfiltered = renderToString(<TreeView data={data} defaultExpandAll />)
 const blank = renderToString(<TreeView data={data} defaultExpandAll filter="   " />)

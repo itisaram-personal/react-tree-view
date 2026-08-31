@@ -129,8 +129,9 @@ explicitly chosen); independent → cascade keeps leaves and re-derives the pare
    grows taller (`wrapLabels`, on by default). `wrapLabels={false}` restores uniform rows that
    ellipsize and scroll sideways.
 9. **Filter** — `filter="text"` (or a predicate) narrows the tree to the matching nodes, their
-   ancestors and their contents, opening the way down to each match. Three O(n) passes over the
-   flat arrays; nothing is rebuilt, so clearing it brings every row straight back.
+   ancestors and their contents, opening the way down to each match, with the matched part of each
+   label marked. Three O(n) passes over the flat arrays; nothing is rebuilt, so clearing it brings
+   every row straight back.
 10. **Demo** — `npm run dev`: presets up to 300k nodes, a cascade/independent switch, live timings
    for every API call, dark mode, row-height slider, label wrapping, filter, find-and-reveal.
 
@@ -180,6 +181,8 @@ open a submenu, `←` / `Esc` close it, typing filters. Try the demo's **Wide (5
 | --- | --- | --- |
 | `data` | — | `TreeNodeSource[]`. Check/expand state is preserved by id when this changes. |
 | `filter` | — | `string` (label contains, case-insensitive) or `(node, index) => boolean`. See below. |
+| `highlightMatches` | `true` | Marks the matched part of a filtered label. |
+| `highlightText` | — | Text to mark instead of the `filter` string — for a predicate filter, or to highlight without filtering. |
 | `rowHeight` | `28` | Minimum row height, and the estimate for rows not measured yet. With `wrapLabels={false}` it is the fixed height of every row. |
 | `wrapLabels` | `true` | Wrap long labels instead of scrolling sideways; rows grow taller. `false` = uniform rows, ellipsis, horizontal scroll. |
 | `overscan` | `8` | Extra rows above and below the viewport. |
@@ -258,6 +261,32 @@ filter.
 `meta.matched` is true for the nodes that matched themselves, so `renderLabel` can mark them apart
 from the ones kept for context. `api.getMatchCount()`, `api.getMatchedIds()` and `api.isMatch(id)`
 report the same thing imperatively.
+
+### Highlighting the match
+
+Matching labels come back with the matched part marked: label `ABCD` under the filter `BC` renders
+`A<mark class="trt-mark">BC</mark>D`, case-insensitively and at every occurrence. Restyle it with
+`--trt-mark-bg` / `--trt-mark-fg` (both have a dark-mode value), or turn it off with
+`highlightMatches={false}`.
+
+```tsx
+<TreeView data={data} filter={text} />                                  // marked by default
+<TreeView data={data} filter={text} highlightMatches={false} />         // plain labels
+<TreeView data={data} filter={predicate} highlightText={text} />        // predicate + text to mark
+<TreeView data={data} highlightText={text} />                           // mark without filtering
+```
+
+Only plain-string labels are marked — a `renderLabel` returning elements owns its own highlighting,
+using the same helper the built-in label does:
+
+```tsx
+import { highlightMatches } from '@tree-view/react-tree-view'
+
+renderLabel={(meta) => <b>{highlightMatches(meta.node.label, text)}</b>}
+```
+
+It returns the text untouched when there is no match, so the unfiltered path allocates nothing. The
+context menu's filter box marks its matches the same way.
 
 Cost is three passes over the flat arrays — test, propagate up, propagate down — about 30 ms for
 137k nodes, dominated by your predicate. A `string` filter is a value, so it can change every

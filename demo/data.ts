@@ -107,6 +107,14 @@ export const PRESETS = [
     target: 300_000,
     wide: 0,
   },
+  {
+    id: 'dso',
+    label: 'DSO nodes L3 B2500 W0',
+    depth: 3,
+    branching: 1000,
+    target: 900_000,
+    wide: 0,
+  },
   { id: 'deep', label: 'Deep  nodes L10 B5 W0', depth: 10, branching: 5, target: 300_000, wide: 0 },
-  { id: 'wide', label: 'Wide (5K siblings)', depth: 2, branching: 3, target: 100_000, wide: 4000 },
+  { id: 'wide', label: 'Wide (5K siblings)', depth: 4, branching: 5, target: 100_000, wide: 4000 },
 ] as const

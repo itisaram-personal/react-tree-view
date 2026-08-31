@@ -237,6 +237,23 @@ export interface TreeViewProps<T = unknown> {
    * changes, so memoize it — an inline arrow re-filters on every render.
    */
   filter?: string | TreeFilterFn<T>
+  /**
+   * Mark the matched part of a label while filtering: label "ABCD" under the
+   * filter "BC" renders A<mark>BC</mark>D. Default true. The mark carries the
+   * `trt-mark` class; restyle it with the `--trt-mark-bg` / `--trt-mark-fg`
+   * custom properties, or turn it off here.
+   *
+   * Only plain-string labels are marked. A `renderLabel` that returns elements
+   * owns its own highlighting — the exported `highlightMatches(text, query)`
+   * helper does the same job on any string it holds.
+   */
+  highlightMatches?: boolean
+  /**
+   * Text to mark instead of the `filter` string — the way to highlight under a
+   * predicate `filter`, which carries no text of its own. Also highlights
+   * without filtering at all, when `filter` is left unset.
+   */
+  highlightText?: string
 
   /** How checkboxes behave. Default `cascade`. */
   selectionMode?: SelectionMode

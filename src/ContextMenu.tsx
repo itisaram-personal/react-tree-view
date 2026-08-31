@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
+import { highlightMatches } from './highlight'
 import type { TreeMenuContext, TreeMenuItem } from './types'
 
 /** Must match the height of `.trt-menu-item` in styles.css. */
@@ -301,7 +302,8 @@ function MenuPanel<T>(props: PanelProps<T>) {
         onClick={() => (hasSub ? openSub(index) : run(item))}
       >
         <span className="trt-menu-icon">{item.icon}</span>
-        <span className="trt-menu-label">{item.label}</span>
+        {/* Same as the tree rows: the filter box marks what it matched on. */}
+        <span className="trt-menu-label">{highlightMatches(item.label, query)}</span>
         {item.shortcut ? <span className="trt-menu-shortcut">{item.shortcut}</span> : null}
         {hasSub ? <span className="trt-menu-arrow" aria-hidden="true" /> : null}
       </button>

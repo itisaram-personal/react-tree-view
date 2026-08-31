@@ -10,6 +10,8 @@
   --trt-accent-fg: #ffffff;
   --trt-border: #d4d7e0;
   --trt-disabled: #9aa0ac;
+  --trt-mark-bg: #fde68a;
+  --trt-mark-fg: #3b2f00;
   --trt-menu-bg: #ffffff;
   --trt-menu-fg: #1f2430;
   --trt-menu-hover: #f1f3f9;
@@ -252,6 +254,16 @@
   overflow-wrap: normal;
 }
 
+/* The matched part of a label under a filter. `inherit` on the font keeps the
+   browser default (bold, in some) from reflowing a row as the filter changes. */
+.trt-mark {
+  border-radius: 3px;
+  padding: 0 1px;
+  background: var(--trt-mark-bg);
+  color: var(--trt-mark-fg);
+  font: inherit;
+}
+
 /* Keeps the badge next to the label while trailing content stays right-aligned. */
 .trt-spacer {
   flex: 1 1 auto;
@@ -417,6 +429,8 @@
   --trt-accent-fg: #10131c;
   --trt-border: #3a4157;
   --trt-disabled: #6b7280;
+  --trt-mark-bg: #7c5c00;
+  --trt-mark-fg: #fff3cd;
   --trt-menu-bg: #1a1f2b;
   --trt-menu-fg: #e6e9f2;
   --trt-menu-hover: #262d3d;

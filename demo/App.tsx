@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
-import { TreeView } from '../src'
+import { highlightMatches, TreeView } from '../src'
 import type { SelectionMode, TreeApi, TreeMenuItem, TreeNodeMeta } from '../src'
 import { makeTree, makeWideTree, PRESETS, type DemoData, type DemoNode } from './data'
 
@@ -53,7 +53,7 @@ export function App() {
   const [, setTick] = useState(0)
   const bump = useCallback(() => setTick((t) => t + 1), [])
 
-  const preset = PRESETS.find((p) => p.id === presetId) ?? PRESETS[2]
+  const preset = PRESETS.find((p) => p.id === presetId) ?? PRESETS[5]
 
   const { data, buildMs, nodeCount } = useMemo(() => {
     const started = performance.now()
@@ -241,8 +241,10 @@ export function App() {
           <span className={kind === 'folder' ? 'demo-icon demo-icon--folder' : 'demo-icon'}>
             {kind === 'folder' ? FOLDER_ICON : FILE_ICON}
           </span>
+          {/* A renderLabel owns its own highlighting: the same helper the
+              built-in label uses marks the matched part of the name. */}
           <span className={meta.matched ? 'demo-name demo-name--match' : 'demo-name'}>
-            {meta.node.label}
+            {highlightMatches(meta.node.label, filter)}
             {longLabels ? LONG_TAIL : ''}
           </span>
           {meta.hasChildren ? <span className="demo-badge">{meta.descendantCount}</span> : null}
@@ -250,7 +252,7 @@ export function App() {
         </span>
       )
     },
-    [longLabels],
+    [longLabels, filter],
   )
 
   const renderTrailing = useCallback(
@@ -452,9 +454,9 @@ export function App() {
                 </button>
               </div>
               <p className="demo-hint">
-                Narrows the tree to the matching nodes (marked), their ancestors and their contents,
-                and opens the way down to them. Nothing is thrown away: check state survives, and
-                clearing brings every row back.
+                Narrows the tree to the matching nodes — with the matched part of the name
+                highlighted — their ancestors and their contents, and opens the way down to them.
+                Nothing is thrown away: check state survives, and clearing brings every row back.
               </p>
             </section>
 
